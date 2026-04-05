@@ -247,6 +247,9 @@ test.describe('QuShader — Quantum Mechanics Sandbox', () => {
     await page.goto('/');
     await waitForSim(page);
 
+    // Reset to clear the auto-launched wavepacket
+    await page.click('#btn-reset');
+
     const canvas = page.locator('#sim');
     const box = await canvas.boundingBox();
 

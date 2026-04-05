@@ -119,9 +119,14 @@ document.getElementById('btn-toggle-potential').addEventListener('click', () => 
 document.getElementById('btn-ground-state').addEventListener('click', () => {
   const btn = document.getElementById('btn-ground-state');
   if (imaginaryTimeMode) {
-    // Stop relaxation, switch to real time
+    // Stop relaxation — launch a wavepacket to show scattering off the orbital
     imaginaryTimeMode = false;
     btn.textContent = 'ground state';
+    const src = potential.sources[0];
+    if (src) {
+      initializer.launch(solver, src.x - 25, src.y, 1.5, 0, 4.0, true);
+    }
+    showPresetInfo('ground-state-done');
     return;
   }
   // Ensure there's at least one potential source
@@ -129,10 +134,11 @@ document.getElementById('btn-ground-state').addEventListener('click', () => {
     potential.addSource(L / 2, L / 2, 1.0, COULOMB);
   }
   potential.update();
-  // Initialize with a broad Gaussian at the first source
-  const src = potential.sources[0];
-  solver.clear();
-  initializer.launch(solver, src.x, src.y, 0, 0, 5.0, false);
+  // Seed a wavefunction if none exists; otherwise project in place
+  if (observables.probability < 0.01) {
+    const src = potential.sources[0];
+    initializer.launch(solver, src.x, src.y, 0, 0, 8.0, false);
+  }
   imaginaryTimeMode = true;
   btn.textContent = 'stop relaxation';
   showPresetInfo('ground-state');
@@ -219,7 +225,8 @@ const presetDescriptions = {
   'corral': 'Quantum corral — eight protons form a ring. Launch a wavepacket inside to see standing waves.',
   'harmonic': 'Harmonic trap — quadratic potential well. The wavepacket oscillates like a quantum spring.',
   'capture': 'Bound state capture — a slow electron falls into a Coulomb well. Watch it ring at the bound state frequency.',
-  'ground-state': 'Imaginary time evolution — the wavefunction relaxes into the ground state orbital. Click "stop relaxation" when converged, then drag to scatter electrons off it.',
+  'ground-state': 'Relaxing into ground state — watch the wavefunction settle into the lowest-energy orbital. Click "stop relaxation" when the shape stabilizes.',
+  'ground-state-done': 'Ground state found. A wavepacket is scattering off the orbital — drag to launch more.',
 };
 
 const presetInfoEl = document.getElementById('preset-info');
@@ -338,8 +345,9 @@ function frame() {
 }
 
 // --- Start ---
-// Place a default proton at the center
+// Place a default proton at the center and launch a slow electron at it
 potential.addSource(L / 2, L / 2, 1.0, COULOMB);
 potential.update();
+initializer.launch(solver, 20, L / 2, 1.0, 0, 4.0, false);
 
 requestAnimationFrame(frame);
