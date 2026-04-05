@@ -48,6 +48,30 @@ void main() {
         } else if (type == 2) {
             // Harmonic: V = 0.5 * Z * r^2
             V += 0.5 * Z * r * r;
+        } else if (type == 3) {
+            // Barrier wall with slits (vertical wall at src_pos.x)
+            // b: (thickness, numGaps, gapWidth, gapSep)
+            float thickness = width;
+            float numGaps = u_sources_b[i].y;
+            float gapW = u_sources_b[i].z;
+            float gapSep2 = u_sources_b[i].w;
+
+            if (abs(dr.x) < thickness * 0.5) {
+                bool in_gap = false;
+                for (int g = 0; g < 4; g++) {
+                    if (float(g) >= numGaps) break;
+                    float gc = (float(g) - (numGaps - 1.0) * 0.5) * gapSep2;
+                    if (abs(dr.y - gc) < gapW * 0.5) in_gap = true;
+                }
+                if (!in_gap) V += Z;
+            }
+        } else if (type == 4) {
+            // Step potential (half-plane)
+            // b: (smoothing width, direction, 0, 0)
+            // direction: 0 = step along +x, 1 = step along +y
+            float dir = u_sources_b[i].y;
+            float edge = dir < 0.5 ? dr.x : dr.y;
+            V += Z * 0.5 * (1.0 + tanh(edge / max(width, 0.01)));
         }
     }
 

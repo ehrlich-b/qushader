@@ -16,6 +16,8 @@ const MAX_SOURCES = 8;
 export const COULOMB = 0;
 export const GAUSSIAN_BARRIER = 1;
 export const HARMONIC = 2;
+export const BARRIER = 3;
+export const STEP = 4;
 
 export class PotentialManager {
   constructor(gl, N, dx) {
@@ -33,10 +35,14 @@ export class PotentialManager {
     this.vao = gl.createVertexArray();
   }
 
-  addSource(x, y, strength, type = COULOMB, width = 1.0) {
+  addSource(x, y, strength, type = COULOMB, width = 1.0, extra = {}) {
     if (this.sources.length >= MAX_SOURCES) return false;
-    const softening = this.dx * 0.5;
-    this.sources.push({ x, y, strength, type, width, softening });
+    this.sources.push({
+      x, y, strength, type, width,
+      param1: extra.param1 ?? (type === COULOMB ? this.dx * 0.5 : 0),
+      param2: extra.param2 ?? 0,
+      param3: extra.param3 ?? 0,
+    });
     this.dirty = true;
     return true;
   }
@@ -89,7 +95,9 @@ export class PotentialManager {
       a[i * 4 + 2] = s.strength;
       a[i * 4 + 3] = s.type;
       b[i * 4 + 0] = s.width;
-      b[i * 4 + 1] = s.softening;
+      b[i * 4 + 1] = s.param1;
+      b[i * 4 + 2] = s.param2;
+      b[i * 4 + 3] = s.param3;
     }
 
     gl.uniform4fv(u.u_sources_a, a);

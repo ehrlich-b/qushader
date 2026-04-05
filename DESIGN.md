@@ -122,7 +122,7 @@ Hartree atomic units: hbar = m_e = e = 4*pi*eps0 = 1
 
 Grid: 512x512, spanning L = 100 a0, so dx = L/512 ~ 0.195 a0
 CFL condition: dt < dx^2/2 ~ 0.019 atomic time units
-Default dt = 0.01, substeps_per_frame = 10
+Default dt = 0.005, substeps_per_frame = 10
 
 ## Interaction Model
 

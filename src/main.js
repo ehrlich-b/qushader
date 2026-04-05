@@ -7,7 +7,7 @@
 
 import { initGL } from './gl-utils.js';
 import { Solver } from './solver.js';
-import { PotentialManager, COULOMB } from './potential.js';
+import { PotentialManager, COULOMB, GAUSSIAN_BARRIER, HARMONIC, BARRIER } from './potential.js';
 import { Initializer } from './initializer.js';
 import { Renderer } from './renderer.js';
 import { Observables } from './observables.js';
@@ -26,7 +26,7 @@ const container = document.getElementById('container');
 const fallback = document.getElementById('fallback');
 
 // Display size — simulation is always N×N, rendered larger
-const displaySize = Math.min(window.innerWidth, window.innerHeight) - 40;
+let displaySize = Math.min(window.innerWidth, window.innerHeight) - 40;
 canvas.width = N;
 canvas.height = N;
 canvas.style.width = displaySize + 'px';
@@ -37,6 +37,16 @@ const dragSvgEl = document.getElementById('drag-arrow');
 dragSvgEl.setAttribute('width', displaySize);
 dragSvgEl.setAttribute('height', displaySize);
 dragSvgEl.setAttribute('viewBox', `0 0 ${displaySize} ${displaySize}`);
+
+// Resize handler
+window.addEventListener('resize', () => {
+  displaySize = Math.min(window.innerWidth, window.innerHeight) - 40;
+  canvas.style.width = displaySize + 'px';
+  canvas.style.height = displaySize + 'px';
+  dragSvgEl.setAttribute('width', displaySize);
+  dragSvgEl.setAttribute('height', displaySize);
+  dragSvgEl.setAttribute('viewBox', `0 0 ${displaySize} ${displaySize}`);
+});
 
 // --- WebGL init ---
 const gl = initGL(canvas);
@@ -106,32 +116,110 @@ document.getElementById('btn-toggle-potential').addEventListener('click', () => 
 
 function reset() {
   solver.clear();
+  potential.clear();
   simTime = 0;
   observables.probability = 1.0;
+  observables.energy = 0;
+  observables.autoBrightness = 40.0;
 }
 
-// --- Drag arrow rendering ---
-function updateDragArrow() {
-  const arrow = interaction.getDragArrow();
-  if (!arrow) {
-    dragSvg.innerHTML = '';
-    return;
-  }
-  const rect = canvas.getBoundingClientRect();
-  const ox = rect.left;
-  const oy = rect.top;
-  const x1 = arrow.x1 - ox;
-  const y1 = arrow.y1 - oy;
-  const x2 = arrow.x2 - ox;
-  const y2 = arrow.y2 - oy;
+// --- Presets ---
+const presets = {
+  'free': () => {
+    initializer.launch(solver, 20, L / 2, 2.0, 0, 4.0, false);
+  },
+  'double-slit': () => {
+    potential.addSource(L / 2, L / 2, 100, BARRIER, 2.0, {
+      param1: 2, param2: 4, param3: 15,
+    });
+    potential.update();
+    initializer.launch(solver, 20, L / 2, 3.0, 0, 6.0, false);
+  },
+  'single-slit': () => {
+    potential.addSource(L / 2, L / 2, 100, BARRIER, 2.0, {
+      param1: 1, param2: 4, param3: 0,
+    });
+    potential.update();
+    initializer.launch(solver, 20, L / 2, 3.0, 0, 6.0, false);
+  },
+  'triple-slit': () => {
+    potential.addSource(L / 2, L / 2, 100, BARRIER, 2.0, {
+      param1: 3, param2: 4, param3: 12,
+    });
+    potential.update();
+    initializer.launch(solver, 20, L / 2, 3.0, 0, 6.0, false);
+  },
+  'tunneling': () => {
+    potential.addSource(L / 2, L / 2, 1.0, GAUSSIAN_BARRIER, 3.0);
+    potential.update();
+    initializer.launch(solver, 25, L / 2, 1.0, 0, 4.0, false);
+  },
+  'coulomb': () => {
+    potential.addSource(L / 2, L / 2, 1.0, COULOMB);
+    potential.update();
+  },
+  'corral': () => {
+    const cx = L / 2, cy = L / 2, r = 20;
+    for (let i = 0; i < 8; i++) {
+      const angle = i * Math.PI / 4;
+      potential.addSource(cx + r * Math.cos(angle), cy + r * Math.sin(angle), 1.0, COULOMB);
+    }
+    potential.update();
+  },
+  'harmonic': () => {
+    potential.addSource(L / 2, L / 2, 0.05, HARMONIC);
+    potential.update();
+    initializer.launch(solver, L / 2 + 10, L / 2, 0, 0, 2.0, false);
+  },
+};
 
-  dragSvg.innerHTML = `
-    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-          stroke="rgba(170,238,255,0.6)" stroke-width="2" />
-    <circle cx="${x1}" cy="${y1}" r="3" fill="rgba(170,238,255,0.8)" />
-    <circle cx="${x2}" cy="${y2}" r="${interaction.sigma * (rect.width / L)}"
-            fill="none" stroke="rgba(170,238,255,0.3)" stroke-width="1" />
-  `;
+function loadPreset(name) {
+  if (!presets[name]) return;
+  reset();
+  presets[name]();
+  if (paused) {
+    paused = false;
+    document.getElementById('btn-pause').textContent = 'pause';
+  }
+}
+
+document.getElementById('preset-select').addEventListener('change', e => {
+  if (e.target.value) {
+    loadPreset(e.target.value);
+    e.target.value = '';
+  }
+});
+
+// --- Overlay rendering (drag arrow + source indicators) ---
+function updateOverlay() {
+  const rect = canvas.getBoundingClientRect();
+  const scale = rect.width / L;
+  let svg = '';
+
+  // Source position indicators
+  for (const s of potential.sources) {
+    const sx = s.x * scale;
+    const sy = rect.height - s.y * scale;
+    svg += `<circle cx="${sx}" cy="${sy}" r="4" fill="none" stroke="rgba(100,180,255,0.4)" stroke-width="1"/>`;
+    svg += `<line x1="${sx - 6}" y1="${sy}" x2="${sx + 6}" y2="${sy}" stroke="rgba(100,180,255,0.25)" stroke-width="0.5"/>`;
+    svg += `<line x1="${sx}" y1="${sy - 6}" x2="${sx}" y2="${sy + 6}" stroke="rgba(100,180,255,0.25)" stroke-width="0.5"/>`;
+  }
+
+  // Drag arrow
+  const arrow = interaction.getDragArrow();
+  if (arrow) {
+    const ox = rect.left;
+    const oy = rect.top;
+    const x1 = arrow.x1 - ox;
+    const y1 = arrow.y1 - oy;
+    const x2 = arrow.x2 - ox;
+    const y2 = arrow.y2 - oy;
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(170,238,255,0.6)" stroke-width="2"/>`;
+    svg += `<circle cx="${x1}" cy="${y1}" r="3" fill="rgba(170,238,255,0.8)"/>`;
+    svg += `<circle cx="${x2}" cy="${y2}" r="${interaction.sigma * scale}" fill="none" stroke="rgba(170,238,255,0.3)" stroke-width="1"/>`;
+  }
+
+  dragSvg.innerHTML = svg;
 }
 
 // --- Animation loop ---
@@ -154,15 +242,19 @@ function frame() {
 
   // Observables
   observables.update(solver, potential.texture);
+  renderer.brightness = observables.autoBrightness;
 
   // HUD
   hudProb.textContent = observables.probability.toFixed(4);
   hudProb.className = Math.abs(observables.probability - 1.0) > 0.1 ? 'warn' : 'value';
+  hudEnergy.textContent = observables.probability > 0.001
+    ? (observables.energy / observables.probability).toFixed(3)
+    : '\u2014';
   hudTime.textContent = simTime.toFixed(2);
   hudSources.textContent = potential.sources.length;
 
-  // Drag arrow
-  updateDragArrow();
+  // Overlay
+  updateOverlay();
 }
 
 // --- Start ---

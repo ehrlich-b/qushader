@@ -47,7 +47,7 @@
       gap: 8px;
       pointer-events: all;
     }
-    #controls button {
+    #controls button, #controls select {
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.15);
       color: #c8c8d0;
@@ -57,7 +57,7 @@
       cursor: pointer;
       border-radius: 3px;
     }
-    #controls button:hover {
+    #controls button:hover, #controls select:hover {
       background: rgba(255,255,255,0.15);
     }
     #info {
@@ -113,6 +113,17 @@
       <div id="potential-mode">2D Coulomb (ln)</div>
     </div>
     <div id="controls">
+      <select id="preset-select">
+        <option value="">presets</option>
+        <option value="free">free particle</option>
+        <option value="double-slit">double slit</option>
+        <option value="single-slit">single slit</option>
+        <option value="triple-slit">triple slit</option>
+        <option value="tunneling">tunneling</option>
+        <option value="coulomb">coulomb scattering</option>
+        <option value="corral">quantum corral</option>
+        <option value="harmonic">harmonic trap</option>
+      </select>
       <button id="btn-pause">pause</button>
       <button id="btn-reset">reset</button>
       <button id="btn-toggle-potential">toggle V(r)</button>

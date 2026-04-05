@@ -58,13 +58,12 @@ fake physics. No hand-waving. If we can't do it right, we don't do it.
 - [x] 2D Coulomb (ln) / 3D slice (1/r) toggle
 
 ### v0 polish
-- [ ] Fix dt=0.005 vs DESIGN.md saying dt=0.01 — sync docs
-- [ ] Window resize handling (displaySize is frozen at load time)
-- [ ] Auto-brightness: scale brightness by 1/max(|psi|^2) so wavefunction stays
-      visible as it spreads. Hardcoded 40.0 loses the packet after a few seconds.
-- [ ] Wire up energy display (reduce.glsl has the kernel, just needs the plumbing)
+- [x] Fix dt=0.005 vs DESIGN.md saying dt=0.01 — sync docs
+- [x] Window resize handling (displaySize is frozen at load time)
+- [x] Auto-brightness: scale brightness by 1/max(|psi|^2) with EMA smoothing
+- [x] Wire up energy display (CPU readback with 5-point stencil laplacian)
 - [ ] GPU reduction for probability (kill the readPixels pipeline stall)
-- [ ] Source position indicators (faint crosshair or dot on the potential sources)
+- [x] Source position indicators (faint crosshair or dot on the potential sources)
 
 ---
 
@@ -73,32 +72,29 @@ fake physics. No hand-waving. If we can't do it right, we don't do it.
 The demos everyone has seen but never interacted with.
 
 ### Double Slit
-- [ ] Barrier potential type: thin wall with configurable gap count, gap width, gap
-      separation. Uniform array: barrier segments or just a potential texture mask.
-- [ ] Preset: single slit, double slit, triple slit
+- [x] Barrier potential type: thin wall with configurable gap count, gap width, gap
+      separation. Implemented as BARRIER type in potential shader.
+- [x] Preset: single slit, double slit, triple slit
 - [ ] This is THE demo. A plane-wave-ish packet hits the slits and you watch the
       interference pattern build up on the far side. Every physics student has seen
       the diagram — nobody has *played* with it. Adjustable slit width and separation
       let you see the fringe spacing change in real time.
 
 ### Tunneling
-- [ ] Gaussian barrier potential (already have the type — just need a preset)
-- [ ] Preset: thick barrier with packet aimed at it. Watch partial transmission,
-      partial reflection. Adjust barrier height and see the transmission coefficient
-      change. Make the barrier wide enough and nothing gets through. Make it thin
-      enough and it's like it's not there.
-- [ ] Step potential variant: sharp wall. Show total reflection below threshold,
-      partial transmission above, evanescent wave inside the barrier.
+- [x] Gaussian barrier potential (already have the type — preset wired up)
+- [x] Preset: thick barrier with packet aimed at it. Watch partial transmission,
+      partial reflection.
+- [x] Step potential variant: STEP type added to shader (smooth tanh edge).
 
 ### Quantum Corral
-- [ ] Preset: ring of 6-12 Coulomb sources arranged in a circle
+- [x] Preset: ring of 8 Coulomb sources arranged in a circle (r=20 a0)
 - [ ] Launch a wavepacket inside the corral and watch standing wave patterns form
 - [ ] This recreates the famous IBM STM experiment (1993) where they arranged iron
       atoms on a copper surface and saw electron standing waves inside. Except here
       you can drag the walls around and watch the patterns reshape in real time.
 
 ### Harmonic Oscillator
-- [ ] Preset: single harmonic source, launch coherent wavepacket
+- [x] Preset: single harmonic source, launch coherent wavepacket
 - [ ] Watch the packet oscillate back and forth, dispersing and refocusing
 - [ ] With imaginary time evolution (v2), find the stationary states and show the
       Hermite-Gaussian structure. In 2D, these are Laguerre-Gaussian modes — the
@@ -113,9 +109,9 @@ The demos everyone has seen but never interacted with.
       Interference between them makes the probability density breathe.
 
 ### Preset System
-- [ ] Dropdown or button row: "Free Particle", "Double Slit", "Tunneling",
-      "Coulomb Scattering", "Quantum Corral", "Harmonic Trap"
-- [ ] Each preset configures sources + fires a wavepacket with good parameters
+- [x] Dropdown: free particle, double slit, single slit, triple slit, tunneling,
+      coulomb scattering, quantum corral, harmonic trap
+- [x] Each preset configures sources + fires a wavepacket with good parameters
 - [ ] Text overlay explaining what you're seeing (dismissible)
 
 ---
