@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuShader — Quantum Mechanics Sandbox</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0f;
+      color: #c8c8d0;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+    #hud {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      pointer-events: none;
+      line-height: 1.6;
+      text-shadow: 0 0 4px rgba(0,0,0,0.8);
+    }
+    #hud .label { color: #666; }
+    #hud .value { color: #aef; }
+    #hud .warn  { color: #f84; }
+    #controls {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      display: flex;
+      gap: 8px;
+      pointer-events: all;
+    }
+    #controls button {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #c8c8d0;
+      padding: 4px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    #controls button:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    #info {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      text-align: right;
+      color: #555;
+      font-size: 11px;
+      line-height: 1.5;
+      pointer-events: none;
+    }
+    #drag-arrow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    #mode-indicator {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      color: #666;
+      font-size: 11px;
+      pointer-events: none;
+    }
+    #fallback {
+      display: none;
+      color: #f84;
+      text-align: center;
+      padding: 40px;
+      max-width: 500px;
+    }
+  </style>
+</head>
+<body>
+  <div id="fallback">
+    <h2>WebGL 2 with float textures required</h2>
+    <p>This simulator needs WebGL 2 and the EXT_color_buffer_float extension to solve the Schrodinger equation on your GPU. Try a recent version of Chrome, Firefox, or Edge on desktop.</p>
+  </div>
+  <div id="container">
+    <canvas id="sim"></canvas>
+    <svg id="drag-arrow"></svg>
+    <div id="hud">
+      <div><span class="label">P = </span><span class="value" id="hud-prob">—</span></div>
+      <div><span class="label">E = </span><span class="value" id="hud-energy">—</span></div>
+      <div><span class="label">t = </span><span class="value" id="hud-time">—</span><span class="label"> a.u.</span></div>
+      <div><span class="label">sources: </span><span class="value" id="hud-sources">0</span></div>
+    </div>
+    <div id="mode-indicator">
+      <div id="potential-mode">2D Coulomb (ln)</div>
+    </div>
+    <div id="controls">
+      <button id="btn-pause">pause</button>
+      <button id="btn-reset">reset</button>
+      <button id="btn-toggle-potential">toggle V(r)</button>
+    </div>
+    <div id="info">
+      drag: launch electron<br>
+      right-click: place/remove proton<br>
+      scroll: adjust width<br>
+      space: pause &middot; r: reset
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
