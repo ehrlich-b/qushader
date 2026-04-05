@@ -62,7 +62,7 @@ fake physics. No hand-waving. If we can't do it right, we don't do it.
 - [x] Window resize handling (displaySize is frozen at load time)
 - [x] Auto-brightness: scale brightness by 1/max(|psi|^2) with EMA smoothing
 - [x] Wire up energy display (CPU readback with 5-point stencil laplacian)
-- [ ] GPU reduction for probability (kill the readPixels pipeline stall)
+- [x] GPU reduction for probability (kill the readPixels pipeline stall)
 - [x] Source position indicators (faint crosshair or dot on the potential sources)
 
 ---
@@ -101,9 +101,7 @@ The demos everyone has seen but never interacted with.
       same modes that describe laser beams.
 
 ### Bound State Capture
-- [ ] This already works organically! Launch a slow electron at a Coulomb well and
-      watch partial capture + partial scattering. But a preset that sets up good
-      parameters would help people find it.
+- [x] Preset: slow electron launched at a Coulomb well with k=0.5, sigma=4.0
 - [ ] Show the captured portion ringing at the bound state frequency — the phase
       wheel spins at E/hbar, so different energy eigenstates spin at different rates.
       Interference between them makes the probability density breathe.
@@ -112,7 +110,7 @@ The demos everyone has seen but never interacted with.
 - [x] Dropdown: free particle, double slit, single slit, triple slit, tunneling,
       coulomb scattering, quantum corral, harmonic trap
 - [x] Each preset configures sources + fires a wavepacket with good parameters
-- [ ] Text overlay explaining what you're seeing (dismissible)
+- [x] Text overlay explaining what you're seeing (dismissible)
 
 ---
 

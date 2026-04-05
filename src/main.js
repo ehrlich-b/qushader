@@ -171,12 +171,50 @@ const presets = {
     potential.update();
     initializer.launch(solver, L / 2 + 10, L / 2, 0, 0, 2.0, false);
   },
+  'capture': () => {
+    potential.addSource(L / 2, L / 2, 1.0, COULOMB);
+    potential.update();
+    initializer.launch(solver, L / 2 - 15, L / 2, 0.5, 0, 4.0, false);
+  },
 };
+
+// --- Preset info overlay ---
+const presetDescriptions = {
+  'free': 'Free particle — a Gaussian wavepacket spreading as it propagates. No potential, pure quantum diffusion.',
+  'double-slit': 'Double slit — watch the interference pattern build as the wavepacket passes through two gaps.',
+  'single-slit': 'Single slit — diffraction through a narrow opening. Narrower slit = wider spread.',
+  'triple-slit': 'Triple slit — three-way interference produces a richer fringe pattern.',
+  'tunneling': 'Quantum tunneling — the packet hits a barrier it classically cannot cross, yet part leaks through.',
+  'coulomb': 'Coulomb scattering — drag to launch an electron at the proton.',
+  'corral': 'Quantum corral — eight protons form a ring. Launch a wavepacket inside to see standing waves.',
+  'harmonic': 'Harmonic trap — quadratic potential well. The wavepacket oscillates like a quantum spring.',
+  'capture': 'Bound state capture — a slow electron falls into a Coulomb well. Watch it ring at the bound state frequency.',
+};
+
+const presetInfoEl = document.getElementById('preset-info');
+let presetInfoTimer = null;
+
+function showPresetInfo(name) {
+  const desc = presetDescriptions[name];
+  if (!desc) return;
+  presetInfoEl.textContent = desc;
+  presetInfoEl.classList.add('visible');
+  clearTimeout(presetInfoTimer);
+  presetInfoTimer = setTimeout(() => {
+    presetInfoEl.classList.remove('visible');
+  }, 5000);
+}
+
+presetInfoEl.addEventListener('click', () => {
+  presetInfoEl.classList.remove('visible');
+  clearTimeout(presetInfoTimer);
+});
 
 function loadPreset(name) {
   if (!presets[name]) return;
   reset();
   presets[name]();
+  showPresetInfo(name);
   if (paused) {
     paused = false;
     document.getElementById('btn-pause').textContent = 'pause';

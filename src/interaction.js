@@ -10,7 +10,7 @@ export class Interaction {
     this.L = L; // total grid size in atomic units
 
     this.sigma = 3.0; // wavepacket width in a0
-    this.momentumScale = 0.5; // AU-to-momentum conversion (keep k < pi/dx ≈ 16)
+    this.momentumScale = 0.1; // AU-to-momentum conversion (keep k < pi/dx ≈ 16)
 
     this.dragging = false;
     this.dragStart = null; // {x, y} in canvas pixels

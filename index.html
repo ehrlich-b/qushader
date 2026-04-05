@@ -86,6 +86,28 @@
       font-size: 11px;
       pointer-events: none;
     }
+    #preset-info {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: #ddd;
+      padding: 16px 24px;
+      border-radius: 6px;
+      max-width: 400px;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.5;
+      pointer-events: all;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 10;
+    }
+    #preset-info.visible {
+      opacity: 1;
+    }
     #fallback {
       display: none;
       color: #f84;
@@ -103,6 +125,7 @@
   <div id="container">
     <canvas id="sim"></canvas>
     <svg id="drag-arrow"></svg>
+    <div id="preset-info"></div>
     <div id="hud">
       <div><span class="label">P = </span><span class="value" id="hud-prob">—</span></div>
       <div><span class="label">E = </span><span class="value" id="hud-energy">—</span></div>
@@ -123,6 +146,7 @@
         <option value="coulomb">coulomb scattering</option>
         <option value="corral">quantum corral</option>
         <option value="harmonic">harmonic trap</option>
+        <option value="capture">bound state capture</option>
       </select>
       <button id="btn-pause">pause</button>
       <button id="btn-reset">reset</button>
