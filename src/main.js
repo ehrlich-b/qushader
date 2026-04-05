@@ -68,6 +68,8 @@ const interaction = new Interaction(canvas, N, dx, L);
 // --- State ---
 let paused = false;
 let simTime = 0;
+let imaginaryTimeMode = false;
+const IMAG_SUBSTEPS = 50; // more substeps for faster convergence
 
 // --- HUD elements ---
 const hudProb = document.getElementById('hud-prob');
@@ -114,10 +116,38 @@ document.getElementById('btn-toggle-potential').addEventListener('click', () => 
   modeIndicator.textContent = mode === 0 ? '2D Coulomb (ln)' : '3D slice (1/r)';
 });
 
+document.getElementById('btn-ground-state').addEventListener('click', () => {
+  const btn = document.getElementById('btn-ground-state');
+  if (imaginaryTimeMode) {
+    // Stop relaxation, switch to real time
+    imaginaryTimeMode = false;
+    btn.textContent = 'ground state';
+    return;
+  }
+  // Ensure there's at least one potential source
+  if (potential.sources.length === 0) {
+    potential.addSource(L / 2, L / 2, 1.0, COULOMB);
+  }
+  potential.update();
+  // Initialize with a broad Gaussian at the first source
+  const src = potential.sources[0];
+  solver.clear();
+  initializer.launch(solver, src.x, src.y, 0, 0, 5.0, false);
+  imaginaryTimeMode = true;
+  btn.textContent = 'stop relaxation';
+  showPresetInfo('ground-state');
+  if (paused) {
+    paused = false;
+    document.getElementById('btn-pause').textContent = 'pause';
+  }
+});
+
 function reset() {
   solver.clear();
   potential.clear();
   simTime = 0;
+  imaginaryTimeMode = false;
+  document.getElementById('btn-ground-state').textContent = 'ground state';
   observables.probability = 1.0;
   observables.energy = 0;
   observables.autoBrightness = 40.0;
@@ -189,6 +219,7 @@ const presetDescriptions = {
   'corral': 'Quantum corral — eight protons form a ring. Launch a wavepacket inside to see standing waves.',
   'harmonic': 'Harmonic trap — quadratic potential well. The wavepacket oscillates like a quantum spring.',
   'capture': 'Bound state capture — a slow electron falls into a Coulomb well. Watch it ring at the bound state frequency.',
+  'ground-state': 'Imaginary time evolution — the wavefunction relaxes into the ground state orbital. Click "stop relaxation" when converged, then drag to scatter electrons off it.',
 };
 
 const presetInfoEl = document.getElementById('preset-info');
@@ -269,8 +300,19 @@ function frame() {
 
   // Evolve
   if (!paused) {
-    for (let i = 0; i < SUBSTEPS; i++) {
-      solver.step(potential.texture);
+    if (imaginaryTimeMode) {
+      for (let i = 0; i < IMAG_SUBSTEPS; i++) {
+        solver.imaginaryStep(potential.texture);
+      }
+      // Renormalize after batch of steps
+      const norm = observables.computeNorm(solver, potential.texture);
+      if (norm > 1e-20) {
+        solver.renormalize(1.0 / Math.sqrt(norm));
+      }
+    } else {
+      for (let i = 0; i < SUBSTEPS; i++) {
+        solver.step(potential.texture);
+      }
     }
     simTime += SUBSTEPS * dt;
   }

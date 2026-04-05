@@ -64,10 +64,8 @@ export class Observables {
     return tex;
   }
 
-  update(solver, potentialTex) {
-    this.frameCounter++;
-    if (this.frameCounter % this.updateInterval !== 0) return;
-
+  /** Run the full GPU reduction pipeline. Updates probability, energy, maxProb, autoBrightness. */
+  _runReduction(solver, potentialTex) {
     const gl = this.gl;
     const dx = this.dx;
 
@@ -127,5 +125,17 @@ export class Observables {
     } else {
       this.autoBrightness = 40.0;
     }
+  }
+
+  update(solver, potentialTex) {
+    this.frameCounter++;
+    if (this.frameCounter % this.updateInterval !== 0) return;
+    this._runReduction(solver, potentialTex);
+  }
+
+  /** On-demand norm computation for imaginary time renormalization. */
+  computeNorm(solver, potentialTex) {
+    this._runReduction(solver, potentialTex);
+    return this.probability;
   }
 }

@@ -13,6 +13,8 @@ import {
 import quadVert from './shaders/quad.vert';
 import evolveRealFrag from './shaders/evolve-real.glsl';
 import evolveImagFrag from './shaders/evolve-imag.glsl';
+import imagStepFrag from './shaders/imaginary-step.glsl';
+import scaleFrag from './shaders/scale.glsl';
 
 export class Solver {
   constructor(gl, N, dx, dt) {
@@ -47,6 +49,8 @@ export class Solver {
     // Compile evolution programs
     this.evolveRealProg = createProgram(gl, quadVert, evolveRealFrag);
     this.evolveImagProg = createProgram(gl, quadVert, evolveImagFrag);
+    this.imagStepProg = createProgram(gl, quadVert, imagStepFrag);
+    this.scaleProg = createProgram(gl, quadVert, scaleFrag);
 
     // Create empty VAO (needed for WebGL 2 draw without buffers)
     this.vao = gl.createVertexArray();
@@ -126,6 +130,68 @@ export class Solver {
     gl.uniform1f(ip.u_absorb_width, this.absorbWidth);
 
     drawFullscreen(gl);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.cur = next;
+  }
+
+  /**
+   * Imaginary time step: evolve real part via psi_new = psi - dt*H(psi).
+   * Damps excited states, projects toward the ground state.
+   * Imaginary part is cleared (ground state is real).
+   */
+  imaginaryStep(potentialTex) {
+    const gl = this.gl;
+    const next = 1 - this.cur;
+
+    gl.bindVertexArray(this.vao);
+    gl.viewport(0, 0, this.N, this.N);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.realFBO[next]);
+    gl.useProgram(this.imagStepProg.program);
+
+    const u = this.imagStepProg.uniforms;
+    bindTextureUnit(gl, 0, this.realTex[this.cur]);
+    bindTextureUnit(gl, 1, potentialTex);
+    gl.uniform1i(u.u_psi, 0);
+    gl.uniform1i(u.u_potential, 1);
+    gl.uniform1f(u.u_dt, this.dt);
+    gl.uniform1f(u.u_dx, this.dx);
+    gl.uniform2f(u.u_resolution, this.N, this.N);
+    gl.uniform1f(u.u_absorb_width, this.absorbWidth);
+
+    drawFullscreen(gl);
+
+    // Ground state is real — clear imaginary part
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.imagFBO[next]);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.cur = next;
+  }
+
+  /** Multiply the real wavefunction by a scalar (for renormalization). */
+  renormalize(scale) {
+    const gl = this.gl;
+    const next = 1 - this.cur;
+
+    gl.bindVertexArray(this.vao);
+    gl.viewport(0, 0, this.N, this.N);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.realFBO[next]);
+    gl.useProgram(this.scaleProg.program);
+
+    const u = this.scaleProg.uniforms;
+    bindTextureUnit(gl, 0, this.realTex[this.cur]);
+    gl.uniform1i(u.u_input, 0);
+    gl.uniform1f(u.u_scale, scale);
+
+    drawFullscreen(gl);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.imagFBO[next]);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     this.cur = next;

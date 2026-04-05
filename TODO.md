@@ -128,14 +128,11 @@ Features that reveal quantum structure you can't see from |psi|^2 alone.
       behind barriers. It's hypnotic and deeply informative.
 
 ### Imaginary Time Evolution
-- [ ] Replace dt with -i*dtau in the evolution (just flip which equation damps and
-      which grows, then renormalize each step)
-- [ ] This exponentially projects onto the ground state. Start from any initial state,
-      evolve in imaginary time, watch it relax into the ground state orbital.
+- [x] Imaginary time step shader: psi_new = psi - dt * H(psi), projects onto ground state
+- [x] GPU renormalization after each batch of imaginary time substeps
+- [x] "ground state" button: initializes Gaussian at first source, runs imaginary time,
+      click again to stop and switch to real time
 - [ ] For 2D hydrogen: shows the ground state is a modified Bessel function K_0
-- [ ] Toggle: "find ground state" button that runs imaginary time until convergence,
-      then switches back to real time so you can watch the stationary state sit there
-      (phase wheel spinning uniformly = single energy eigenstate)
 - [ ] Excited states via Gram-Schmidt: project out the ground state, re-evolve to
       find the first excited state. Repeat for higher states.
 
